@@ -33,7 +33,7 @@ stages:
         
         - script: |
             echo "Installing govulncheck version $(govulncheckVersion)..."
-            /usr/local/go/bin/go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
+            go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
             echo "Running govulncheck..."
             govulncheck ./...
           displayName: 'Run govulncheck'
