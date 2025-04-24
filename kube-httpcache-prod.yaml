@@ -51,9 +51,11 @@ stages:
             - task: SonarCloudPublish@3
               inputs:
                 pollingTimeoutSec: '300'
+                failWhenQualityGateFails: true
   - stage: build_kube_httpcache
     displayName: 'Build KubeHttpCache Image'
     dependsOn: SonarQube_Analysis
+    condition: succeeded()
     jobs:
       - template: templates/build-kube-httpcache.yml
         parameters:
