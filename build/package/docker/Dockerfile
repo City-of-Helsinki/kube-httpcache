@@ -2,7 +2,7 @@
 # Stage 1: Build kube-httpcache
 ###############
 ARG GO_VERSION=1.24.2
-FROM public.ecr.aws/docker/library/golang:${GO_VERSION}-bookworm AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:${GO_VERSION} as builder
 WORKDIR /workspace
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux \
@@ -11,33 +11,32 @@ RUN CGO_ENABLED=0 GOOS=linux \
 # Stage 2: Build Prometheus Varnish Exporter
 ###############
 ARG GO_VERSION=1.24.2
-FROM public.ecr.aws/docker/library/golang:${GO_VERSION}-bookworm AS builder-exporter
+FROM registry.access.redhat.com/ubi9/go-toolset:${GO_VERSION} AS builder-exporter
 ARG EXPORTER_VERSION=1.6.1
 WORKDIR /workspace
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git ca-certificates && \
+RUN yum update -y && \
+    yum install -y git ca-certificates && \
     git clone https://github.com/jonnenauha/prometheus_varnish_exporter.git --branch ${EXPORTER_VERSION} --depth 1 && \
     cd prometheus_varnish_exporter && \
     go build -o /workspace/prometheus_varnish_exporter && \
-    apt-get purge -y git && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    yum remove -y git && \
+    yum clean all && \
+    rm -rf /var/cache/yum /tmp/* /var/tmp/*
 ###############
-# Stage 3: Final Image with Varnish 7.7
+# Stage 3: Final Image with Varnish 7.7 on UBI 9
 ###############
-FROM public.ecr.aws/docker/library/debian:bookworm-slim AS final
+FROM registry.access.redhat.com/ubi9/ubi as final
 ARG VARNISH_REPO_VERSION=77
+ARG VARNISH_VERSION=7.7.0
+ARG VARNISH_RELEASE=1
+ARG VARNISH_ARCH=el9.x86_64
 WORKDIR /
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
-    curl -fsSL https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.deb.sh | bash && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends varnish && \
-    apt-get purge -y curl gnupg zlib1g-dev libminizip-dev && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/* /usr/include/minizip /usr/share/doc/minizip*
+RUN yum install -y curl ca-certificates && \
+    curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.rpm.sh | bash && \
+    yum install -y varnish-${VARNISH_VERSION}-${VARNISH_RELEASE}.${VARNISH_ARCH} && \
+    yum clean all && \
+    rm -rf /var/cache/yum /tmp/* /var/tmp/*
+
 RUN mkdir -p /exporter && chown -R varnish /exporter
 COPY --from=builder /workspace/kube-httpcache .
 COPY --from=builder-exporter /workspace/prometheus_varnish_exporter /exporter/
