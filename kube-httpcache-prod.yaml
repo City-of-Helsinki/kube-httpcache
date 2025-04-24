@@ -24,26 +24,16 @@ stages:
         steps:
         - script: |
             echo "Installing Go version $(goVersion)..."
-            
-            # Download Go tarball to the /tmp directory to avoid permission issues
             wget https://golang.org/dl/go$(goVersion).linux-amd64.tar.gz -P /tmp/
-            
-            # Extract Go tarball into /usr/local
             sudo tar -C /usr/local -xzf /tmp/go$(goVersion).linux-amd64.tar.gz
-            
-            # Ensure the Go binary is in the system PATH
-            echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
-            source $BASH_ENV
-            
-            # Verify Go is installed correctly
+            echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+            source ~/.bashrc
             go version
           displayName: 'Install Go $(goVersion)'
-        
         - script: |
-            source $BASH_ENV
             echo "Installing govulncheck version $(govulncheckVersion)..."
             /usr/local/go/bin/go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
-            echo "govulncheck installed at: $(which govulncheck)"
+            govulncheck --version
             govulncheck ./...
           displayName: 'Run govulncheck'
   - stage: SonarQube_Analysis
