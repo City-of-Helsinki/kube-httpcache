@@ -2,7 +2,7 @@
 # Stage 1: Build kube-httpcache
 ###############
 ARG GO_VERSION=1.23.6-1.1744600118
-FROM registry.redhat.io/rhel8/go-toolset:${GO_VERSION} as builder
+FROM registry.redhat.io/rhel8/go-toolset:${GO_VERSION} AS builder
 USER 0
 WORKDIR /workspace
 COPY --chown=1001:0 . .
@@ -38,12 +38,11 @@ ARG VARNISH_VERSION=7.7.0
 ARG VARNISH_RELEASE=1
 ARG VARNISH_ARCH=el9.x86_64
 WORKDIR /
-RUN curl-minimal -s https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.rpm.sh | bash && \
+RUN curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.rpm.sh | bash && \
     yum install -y varnish-${VARNISH_VERSION}-${VARNISH_RELEASE}.${VARNISH_ARCH} && \
     yum clean all && \
-    rm -rf /var/cache/yum /tmp/* /var/tmp/*
-
-RUN mkdir -p /exporter && chown -R 1001:0 /exporter
+    rm -rf /var/cache/yum /tmp/* /var/tmp/* && \
+    mkdir -p /exporter && chown -R 1001:0 /exporter
 COPY --from=builder --chown=1001:0 /workspace/kube-httpcache .
 COPY --from=builder-exporter --chown=1001:0 /workspace/prometheus_varnish_exporter /exporter/
 
