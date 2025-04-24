@@ -32,13 +32,14 @@ stages:
           displayName: 'Install Go $(goVersion)'
         - script: |
             echo "Installing govulncheck version $(govulncheckVersion)..."
-            /usr/local/go/bin/go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
-            govulncheck --version
-            govulncheck ./...
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
+            $(go env GOPATH)/bin/govulncheck --version
+            $(go env GOPATH)/bin/govulncheck ./...
           displayName: 'Run govulncheck'
   - stage: SonarQube_Analysis
     displayName: 'SonarQube Analysis'
-    dependsOn: GoVulnCheck
+    dependsOn: VulnScan
     jobs:
         - job: SonarQube
           displayName: 'Run SonarQube Scanner'
