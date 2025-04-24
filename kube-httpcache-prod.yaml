@@ -9,7 +9,7 @@ variables:
   ocVersion: 'v4.13.44'
   kubeHttpCacheVersion: '0.2'
   sonarQubeConnection: 'sonarcloud'
-  goVersion: '1.24.2'  
+  goVersion: '1.23.6'  
   goInstallPath: '/usr/local/go'
   govulncheckVersion: 'latest'
 
@@ -24,7 +24,7 @@ stages:
         steps:
         - task: GoTool@0
           inputs:
-            version: '1.24.2'
+            version: $(goVersion)
           
         - script: |
             export PATH=$PATH:$(go env GOPATH)/bin

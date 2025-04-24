@@ -1,7 +1,7 @@
 ###############
 # Stage 1: Build kube-httpcache
 ###############
-ARG GO_VERSION=1.24.2
+ARG GO_VERSION=1.23.6-1.1744600118
 FROM registry.access.redhat.com/ubi9/go-toolset:${GO_VERSION} as builder
 WORKDIR /workspace
 COPY . .
@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 GOOS=linux \
 ###############
 # Stage 2: Build Prometheus Varnish Exporter
 ###############
-ARG GO_VERSION=1.24.2
+ARG GO_VERSION=1.23.6-1.1744600118
 FROM registry.access.redhat.com/ubi9/go-toolset:${GO_VERSION} AS builder-exporter
 ARG EXPORTER_VERSION=1.6.1
 WORKDIR /workspace
@@ -25,7 +25,7 @@ RUN yum update -y && \
 ###############
 # Stage 3: Final Image with Varnish 7.7 on UBI 9
 ###############
-FROM registry.access.redhat.com/ubi9/ubi as final
+FROM registry.redhat.io/ubi9/ubi:9.5-1744101466 AS final
 ARG VARNISH_REPO_VERSION=77
 ARG VARNISH_VERSION=7.7.0
 ARG VARNISH_RELEASE=1
