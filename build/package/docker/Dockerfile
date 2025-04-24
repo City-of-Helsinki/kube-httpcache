@@ -3,29 +3,36 @@
 ###############
 ARG GO_VERSION=1.23.6-1.1744600118
 FROM registry.redhat.io/rhel8/go-toolset:${GO_VERSION} as builder
+USER 0
 WORKDIR /workspace
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux \
+COPY --chown=1001:0 . .
+RUN chmod -R g+w /workspace && \
+    CGO_ENABLED=0 GOOS=linux \
     go build -installsuffix cgo -o kube-httpcache -a cmd/kube-httpcache/main.go
+
 ###############
 # Stage 2: Build Prometheus Varnish Exporter
 ###############
 ARG GO_VERSION=1.23.6-1.1744600118
 FROM registry.redhat.io/rhel8/go-toolset:${GO_VERSION} AS builder-exporter
+USER 0
 ARG EXPORTER_VERSION=1.6.1
 WORKDIR /workspace
 RUN yum update -y && \
     yum install -y git ca-certificates && \
     git clone https://github.com/jonnenauha/prometheus_varnish_exporter.git --branch ${EXPORTER_VERSION} --depth 1 && \
     cd prometheus_varnish_exporter && \
+    chmod -R g+w /workspace && \
     go build -o /workspace/prometheus_varnish_exporter && \
     yum remove -y git && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/* /var/tmp/*
+
 ###############
 # Stage 3: Final Image with Varnish 7.7 on UBI 9
 ###############
 FROM registry.redhat.io/ubi9/ubi:9.5-1744101466 AS final
+USER 0
 ARG VARNISH_REPO_VERSION=77
 ARG VARNISH_VERSION=7.7.0
 ARG VARNISH_RELEASE=1
@@ -37,8 +44,9 @@ RUN yum install -y curl ca-certificates && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/* /var/tmp/*
 
-RUN mkdir -p /exporter && chown -R varnish /exporter
-COPY --from=builder /workspace/kube-httpcache .
-COPY --from=builder-exporter /workspace/prometheus_varnish_exporter /exporter/
+RUN mkdir -p /exporter && chown -R 1001:0 /exporter
+COPY --from=builder --chown=1001:0 /workspace/kube-httpcache .
+COPY --from=builder-exporter --chown=1001:0 /workspace/prometheus_varnish_exporter /exporter/
 
+USER 1001
 ENTRYPOINT ["/kube-httpcache"]
