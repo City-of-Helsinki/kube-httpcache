@@ -27,8 +27,8 @@ stages:
             wget https://golang.org/dl/go$(goVersion).linux-amd64.tar.gz
             tar -C /usr/local -xzf go$(goVersion).linux-amd64.tar.gz
             echo "Go installed, version: $(go version)"
-            echo "Adding Go binary directory to PATH"
-            echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
+            echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.bashrc
+            source $HOME/.bashrc
           displayName: 'Install Go $(goVersion)'
         
         - script: |
