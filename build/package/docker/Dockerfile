@@ -45,8 +45,10 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.n
     mkdir -p /exporter && chown -R 1001:0 /exporter
 
 # Copy only necessary binaries
-COPY --from=builder --chown=1001:0 /workspace/kube-httpcache .
-COPY --from=builder-exporter --chown=1001:0 /workspace/prometheus_varnish_exporter /exporter/
+COPY --from=builder /workspace/kube-httpcache /kube-httpcache
+RUN chown 1001:0 /kube-httpcache && chmod 0555 /kube-httpcache
+COPY --from=builder-exporter /workspace/prometheus_varnish_exporter /exporter/
+RUN chown 1001:0 /exporter/prometheus_varnish_exporter && chmod 0555 /exporter/prometheus_varnish_exporter
 
 USER 1001
 ENTRYPOINT ["/kube-httpcache"]
