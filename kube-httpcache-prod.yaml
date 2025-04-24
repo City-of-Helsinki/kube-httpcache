@@ -33,6 +33,9 @@ stages:
         - script: |
             echo "Installing govulncheck version $(govulncheckVersion)..."
             export PATH=$PATH:$(go env GOPATH)/bin
+            go clean -cache -modcache -fuzzcache
+            go mod tidy
+            go build ./...
             go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
             $(go env GOPATH)/bin/govulncheck --version
             $(go env GOPATH)/bin/govulncheck ./...
