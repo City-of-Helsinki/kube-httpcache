@@ -28,14 +28,14 @@ stages:
             tar -C /usr/local -xzf go$(goVersion).linux-amd64.tar.gz
             echo "Go installed, version: $(go version)"
             echo "Adding Go binary directory to PATH"
-            echo "/usr/local/go/bin" >> $GITHUB_ENV  # Adding to $GITHUB_ENV for Azure pipelines
+            echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
           displayName: 'Install Go $(goVersion)'
         
         - script: |
             echo "Installing govulncheck version $(govulncheckVersion)..."
             /usr/local/go/bin/go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
             echo "Running govulncheck..."
-            /usr/local/go/bin/govulncheck ./...
+            govulncheck ./...
           displayName: 'Run govulncheck'
   - stage: SonarQube_Analysis
     displayName: 'SonarQube Analysis'
