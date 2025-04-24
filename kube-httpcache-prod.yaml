@@ -22,24 +22,28 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         steps:
+        - task: GoTool@0  # Use Azure's native Go tool installer
+          inputs:
+            version: '1.24.2'  # Forces exact version
+            goPath: '$(GOPATH)'  # Explicit GOPATH
+        
         - script: |
-            echo "Installing Go version $(goVersion)..."
-            wget https://golang.org/dl/go$(goVersion).linux-amd64.tar.gz -P /tmp/
-            sudo tar -C /usr/local -xzf /tmp/go$(goVersion).linux-amd64.tar.gz
-            echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
-            source ~/.bashrc
             go version
-          displayName: 'Install Go $(goVersion)'
+            go env
+          displayName: 'Clean Go Environment'
+        
         - script: |
-            echo "Installing govulncheck version $(govulncheckVersion)..."
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go clean -cache -modcache -fuzzcache
-            go mod tidy
-            go build ./...
-            go install golang.org/x/vuln/cmd/govulncheck@$(govulncheckVersion)
-            $(go env GOPATH)/bin/govulncheck --version
+            # Rebuild everything from scratch
+            go mod download
+            go mod verify
+            go build -v ./...
+            
+            # Run govulncheck
+            go install golang.org/x/vuln/cmd/govulncheck@latest
             $(go env GOPATH)/bin/govulncheck ./...
-          displayName: 'Run govulncheck'
+          displayName: 'Rebuild & Scan'
+          env:
+            PATH: $(go env GOPATH)/bin:$(PATH)
   - stage: SonarQube_Analysis
     displayName: 'SonarQube Analysis'
     dependsOn: GoVulnCheck
