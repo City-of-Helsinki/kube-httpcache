@@ -39,7 +39,7 @@ stages:
           displayName: 'Run govulncheck'
   - stage: SonarQube_Analysis
     displayName: 'SonarQube Analysis'
-    dependsOn: VulnScan
+    dependsOn: GoVulnCheck
     jobs:
         - job: SonarQube
           displayName: 'Run SonarQube Scanner'
