@@ -19,7 +19,7 @@ USER 0
 ARG EXPORTER_VERSION=1.6.1
 WORKDIR /workspace
 RUN yum update -y && \
-    yum install -y git ca-certificates && \
+    yum install -y git && \
     git clone https://github.com/jonnenauha/prometheus_varnish_exporter.git --branch ${EXPORTER_VERSION} --depth 1 && \
     cd prometheus_varnish_exporter && \
     chmod -R g+w /workspace && \
@@ -38,8 +38,7 @@ ARG VARNISH_VERSION=7.7.0
 ARG VARNISH_RELEASE=1
 ARG VARNISH_ARCH=el9.x86_64
 WORKDIR /
-RUN yum install -y curl ca-certificates && \
-    curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.rpm.sh | bash && \
+RUN curl-minimal -s https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_REPO_VERSION}/script.rpm.sh | bash && \
     yum install -y varnish-${VARNISH_VERSION}-${VARNISH_RELEASE}.${VARNISH_ARCH} && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/* /var/tmp/*
