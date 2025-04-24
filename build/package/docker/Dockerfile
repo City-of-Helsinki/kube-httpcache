@@ -5,7 +5,9 @@ ARG GO_VERSION=1.23.6-1.1744600118
 FROM registry.redhat.io/rhel8/go-toolset:${GO_VERSION} AS builder
 USER 0
 WORKDIR /workspace
-COPY . .
+COPY go.mod go.sum ./
+COPY ./cmd/kube-httpcache ./cmd/kube-httpcache
+COPY ./pkg ./pkg
 RUN CGO_ENABLED=0 GOOS=linux \
     go build -ldflags="-s -w" -o kube-httpcache ./cmd/kube-httpcache
 
