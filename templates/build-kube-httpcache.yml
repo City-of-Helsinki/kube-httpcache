@@ -11,6 +11,10 @@ parameters:
   type: string
 - name: kubeHttpCacheVersion
   type: string
+- name: goToolsetTag
+  type: string
+- name: ubiTag
+  type: string
 
 jobs:
   - job: BuildDockerImage
@@ -23,6 +27,10 @@ jobs:
           connectionType: 'OpenShift Connection Service'
           openshiftService: ${{ parameters.openshiftService }}
           version: ${{ parameters.ocVersion }}
+      - script: |
+          sed -i "s|__GO_VERSION__|$(goToolsetTag)|g" build/package/docker/Dockerfile
+          sed -i "s|__UBI_TAG__|$(ubiTag)|g" build/package/docker/Dockerfile
+        displayName: 'Inject GO_VERSION and UBI_TAG into Dockerfile'
       - script: |
           export ENVIRONMENT="${{ parameters.environment }}"
           export NAMESPACE="${{ parameters.namespace }}"

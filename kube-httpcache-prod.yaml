@@ -2,8 +2,8 @@ trigger: none
 pr: none
 
 variables:
-  environment: devtest   #<< change this for every environment
-  openshiftService: devops-toolchain  #<< change this for every environment
+  environment: devtest   
+  openshiftService: devops-toolchain
   KubeHttpCacheConfigName: 'kube-httpcache'
   openshiftProject: 'devops-toolchain'
   ocVersion: 'v4.13.44'
@@ -12,7 +12,8 @@ variables:
   goVersion: '1.23.6'  
   goInstallPath: '/usr/local/go'
   govulncheckVersion: 'latest'
-
+  goToolsetTag: '1.23.6-1.1744600118'         # <-- latest UBI 9 gotoolset image tag as of 25-04-2025
+  ubiTag: '9.5-1744101466'                    # <-- latest UBI 9 core image tag as of 25-04-2025
 stages:
   - stage: GoVulnCheck
     displayName: 'Go Vulnerability Scan'
