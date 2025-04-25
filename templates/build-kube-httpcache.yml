@@ -28,8 +28,9 @@ jobs:
           openshiftService: ${{ parameters.openshiftService }}
           version: ${{ parameters.ocVersion }}
       - script: |
-          sed -i "s|__GO_VERSION__|$(goToolsetTag)|g" build/package/docker/Dockerfile
-          sed -i "s|__UBI_TAG__|$(ubiTag)|g" build/package/docker/Dockerfile
+          sed -i "s|__GO_VERSION__|$(goToolsetTag)|g" $(Build.SourcesDirectory)/build/package/docker/Dockerfile
+          sed -i "s|__UBI_TAG__|$(ubiTag)|g" $(Build.SourcesDirectory)/build/package/docker/Dockerfile
+          cat $(Build.SourcesDirectory)/build/package/docker/Dockerfile
         displayName: 'Inject GO_VERSION and UBI_TAG into Dockerfile'
       - script: |
           export ENVIRONMENT="${{ parameters.environment }}"
