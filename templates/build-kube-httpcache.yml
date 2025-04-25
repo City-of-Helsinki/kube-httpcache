@@ -43,10 +43,10 @@ jobs:
           export __GO_VERSION__="${{ parameters.goToolsetTag }}"
           export __UBI_TAG__="${{ parameters.ubiTag }}"
           export PROM_EXPORTER_VERSION="${{ parameters.promExporterVersion }}"
-          export VARNISH_REPO_VERSION="${{ parameters.promExporterVersion }}"
-          export ARG VARNISH_VERSION="${{ parameters.promExporterVersion }}"
-          export ARG VARNISH_RELEASE="${{ parameters.promExporterVersion }}"
-          export ARG VARNISH_ARCH="${{ parameters.promExporterVersion }}"
+          export VARNISH_REPO_VERSION="${{ parameters.varnishRepoVersion }}"
+          export ARG VARNISH_VERSION="${{ parameters.varnishVersion }}"
+          export ARG VARNISH_RELEASE="${{ parameters.varishRelease }}"
+          export ARG VARNISH_ARCH="${{ parameters.varnishArch }}"
           envsubst < $(Build.SourcesDirectory)/build/package/docker/Dockerfile > tempdockerfile && mv tempdockerfile $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           cat $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           envsubst < $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml > temp.yaml && mv temp.yaml $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
