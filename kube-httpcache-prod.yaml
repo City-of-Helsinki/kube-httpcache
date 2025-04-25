@@ -14,6 +14,7 @@ variables:
   govulncheckVersion: 'latest'
   goToolsetTag: '1.23.6-1.1744600118'         # <-- latest UBI 9 gotoolset image tag as of 25-04-2025
   ubiTag: '9.5-1744101466'                    # <-- latest UBI 9 core image tag as of 25-04-2025
+  promExporterVersion: '1.6.1'
 stages:
   - stage: GoVulnCheck
     displayName: 'Go Vulnerability Scan'
@@ -68,3 +69,4 @@ stages:
           kubeHttpCacheVersion: $(kubeHttpCacheVersion)
           ubiTag: $(ubiTag)
           goToolsetTag: $(goToolsetTag)
+          promExporterVersion: $(promExporterVersion)

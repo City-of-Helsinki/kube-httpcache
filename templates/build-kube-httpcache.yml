@@ -15,6 +15,8 @@ parameters:
   type: string
 - name: ubiTag
   type: string
+- name: promExporterVersion
+  type: string
 
 jobs:
   - job: BuildDockerImage
@@ -33,6 +35,7 @@ jobs:
           export KUBE_HTTP_CACHE_VERSION="${{ parameters.kubeHttpCacheVersion }}" 
           export __GO_VERSION__="${{ parameters.goToolsetTag }}"
           export __UBI_TAG__="${{ parameters.ubiTag }}"
+          export PROM_EXPORTER_VERSION="${{ parameters.promExporterVersion }}"
           envsubst < $(Build.SourcesDirectory)/build/package/docker/Dockerfile > tempdockerfile && mv tempdockerfile $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           cat $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           envsubst < $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml > temp.yaml && mv temp.yaml $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
