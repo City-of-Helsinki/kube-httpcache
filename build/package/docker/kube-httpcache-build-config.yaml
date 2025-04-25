@@ -31,10 +31,7 @@ spec:
       dockerfilePath: build/package/docker/Dockerfile
   postCommit: {}
   source:
-    type: Git
-    git:
-      uri: 'https://github.com/City-of-Helsinki/kube-httpcache'
-      ref: master
+    type: Binary
     contextDir: /
   triggers: []
   runPolicy: Serial

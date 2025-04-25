@@ -38,7 +38,7 @@ jobs:
           envsubst < $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml > temp.yaml && mv temp.yaml $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
           cat $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
           oc apply -f $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml -n ${{ parameters.namespace }}
-          oc start-build ${{ parameters.KubeHttpCacheConfigName }} -n ${{ parameters.namespace }} --insecure-skip-tls-verify=true
+          oc start-build ${{ parameters.KubeHttpCacheConfigName }} --from-dir=$(Build.SourcesDirectory) -n ${{ parameters.namespace }} --insecure-skip-tls-verify=true
           
           echo "Waiting for build to be created..."
           while true; do
