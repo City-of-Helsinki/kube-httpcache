@@ -7,7 +7,7 @@ variables:
   KubeHttpCacheConfigName: 'kube-httpcache'
   openshiftProject: 'devops-toolchain'
   ocVersion: 'v4.13.44'
-  kubeHttpCacheVersion: '0.3'
+  kubeHttpCacheVersion: 'stable-1.0'
   sonarQubeConnection: 'sonarcloud'
   goVersion: '1.23.6'  
   goInstallPath: '/usr/local/go'
