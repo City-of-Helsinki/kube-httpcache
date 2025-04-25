@@ -73,3 +73,7 @@ stages:
           ubiTag: $(ubiTag)
           goToolsetTag: $(goToolsetTag)
           promExporterVersion: $(promExporterVersion)
+          varnishRepoVersion: $(varnishRepoVersion)
+          varnishVersion: $(varnishVersion)
+          varishRelease: $(varishRelease)
+          varnishArch: $(varnishArch)
