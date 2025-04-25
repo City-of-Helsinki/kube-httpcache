@@ -10,11 +10,14 @@ variables:
   kubeHttpCacheVersion: 'stable-1.0'
   sonarQubeConnection: 'sonarcloud'
   goVersion: '1.23.6'  
-  goInstallPath: '/usr/local/go'
-  govulncheckVersion: 'latest'
+  # docker variables below
   goToolsetTag: '1.23.6-1.1744600118'         # <-- latest UBI 9 gotoolset image tag as of 25-04-2025
   ubiTag: '9.5-1744101466'                    # <-- latest UBI 9 core image tag as of 25-04-2025
   promExporterVersion: '1.6.1'
+  varnishRepoVersion: '77'
+  varnishVersion: '7.7.0'
+  varishRelease: '1'
+  varnishArch: 'el9.x86_64'
 stages:
   - stage: GoVulnCheck
     displayName: 'Go Vulnerability Scan'
