@@ -31,8 +31,9 @@ jobs:
           export ENVIRONMENT="${{ parameters.environment }}"
           export NAMESPACE="${{ parameters.namespace }}"
           export KUBE_HTTP_CACHE_VERSION="${{ parameters.kubeHttpCacheVersion }}" 
-          sed -i "s|__GO_VERSION__|$(goToolsetTag)|g" $(Build.SourcesDirectory)/build/package/docker/Dockerfile
-          sed -i "s|__UBI_TAG__|$(ubiTag)|g" $(Build.SourcesDirectory)/build/package/docker/Dockerfile
+          export __GO_VERSION__="${{ parameters.goToolsetTag }}"
+          export __UBI_TAG__="${{ parameters.ubiTag }}"
+          envsubst < $(Build.SourcesDirectory)/build/package/docker/Dockerfile > tempdockerfile && mv tempdockerfile $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           cat $(Build.SourcesDirectory)/build/package/docker/Dockerfile
           envsubst < $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml > temp.yaml && mv temp.yaml $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
           cat $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
