@@ -1,15 +1,17 @@
 module github.com/City-of-Helsinki/kube-httpcache
 
-go 1.23.6
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/golang/glog v1.2.4
+	github.com/golang/glog v1.2.5
 	github.com/martin-helmich/go-varnish-client v0.3.1
 	github.com/prometheus/client_golang v1.22.0
-	k8s.io/api v0.32.3
-	k8s.io/apimachinery v0.32.3
-	k8s.io/client-go v0.32.3
+	k8s.io/api v0.33.2
+	k8s.io/apimachinery v0.33.2
+	k8s.io/client-go v0.33.2
 )
 
 require (
