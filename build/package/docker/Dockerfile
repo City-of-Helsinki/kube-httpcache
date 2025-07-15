@@ -17,7 +17,7 @@ FROM registry.redhat.io/rhel8/go-toolset:$__GO_VERSION__ AS builder-exporter
 USER 0
 WORKDIR /workspace
 RUN yum install -y git --setopt=tsflags=nodocs && \
-    git clone https://github.com/jonnenauha/prometheus_varnish_exporter.git --branch $PROM_EXPORTER_VERSION --depth 1 && \
+    git clone https://github.com/leontappe/prometheus_varnish_exporter.git --branch $PROM_EXPORTER_VERSION --depth 1 && \
     cd prometheus_varnish_exporter && \
     go build -ldflags="-s -w" -o /workspace/prometheus_varnish_exporter && \
     yum remove -y git && \
