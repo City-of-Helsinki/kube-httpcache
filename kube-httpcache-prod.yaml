@@ -7,17 +7,17 @@ variables:
   KubeHttpCacheConfigName: 'kube-httpcache'
   openshiftProject: 'devops-toolchain'
   ocVersion: 'v4.13.44'
-  kubeHttpCacheVersion: 'stable-2.0'
+  kubeHttpCacheVersion: 'stable-2.0'        # selected on 20-10-2025 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
-  goVersion: '1.24.6'  
+  goVersion: '1.24.6'                       # selected on 20-10-2025 # <-- select latest go version as per goToolsetTag version number availability from redhat -- https://catalog.redhat.com - reponame - ubi9/go-toolset
   # docker variables below
-  goToolsetTag: '1.24.6-1760420453'         # <-- latest UBI 9 gotoolset image tag as of 20-10-2025 -- https://catalog.redhat.com/en/software/containers/rhel9/go-toolset/61df08166d9a1b7b2aab2344
-  ubiTag: '9.6-1760340943'                    # <-- latest UBI 9 core image tag as of 20-10-2025 -- https://catalog.redhat.com/en/software/containers/ubi9/ubi/615bcf606feffc5384e8452e
-  promExporterVersion: 'v1.7.0'
-  varnishRepoVersion: '80'                  # <-- https://packagecloud.io/varnishcache/  repo version from here
-  varnishVersion: '8.0.0'                   # <-- https://packagecloud.io/varnishcache/  varnish version from here
-  varishRelease: '1'                        # <-- https://packagecloud.io/varnishcache/  varnish release number from here
-  varnishArch: 'el9.x86_64'                 # <-- https://packagecloud.io/varnishcache/  varnish architecture from here
+  goToolsetTag: '1.24.6-1760420453'         # selected  on 20-10-2025 # <-- select latest version from -- https://catalog.redhat.com - reponame - ubi9/go-toolset
+  ubiTag: '9.6-1760340943'                  # selected  on 20-10-2025 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
+  promExporterVersion: 'v1.7.0'             # selected  on 20-10-2025 # <-- prom exporter version number from  https://github.com/leontappe/prometheus_varnish_exporter.git
+  varnishRepoVersion: '80'                  # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  repo version from here  # if 8.0 then its 80
+  varnishVersion: '8.0.0'                   # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish version from here - check version inside varnish repo selected
+  varishRelease: '1'                        # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish release number from here - check release number - usually  1 
+  varnishArch: 'el9.x86_64'                 # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish architecture from here - mostly does not change
 stages:
   - stage: GoVulnCheck
     displayName: 'Go Vulnerability Scan'
