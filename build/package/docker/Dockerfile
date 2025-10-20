@@ -1,7 +1,7 @@
 ###############
 # Stage 1: Build kube-httpcache (Multi-stage)
 ###############
-FROM registry.redhat.io/rhel8/go-toolset:$__GO_VERSION__ AS builder
+FROM registry.redhat.io/rhel9/go-toolset:$__GO_VERSION__ AS builder
 USER 0
 WORKDIR /workspace
 COPY go.mod go.sum ./
@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GOOS=linux \
 ###############
 # Stage 2: Build Prometheus Varnish Exporter (Optimized)
 ###############
-FROM registry.redhat.io/rhel8/go-toolset:$__GO_VERSION__ AS builder-exporter
+FROM registry.redhat.io/rhel9/go-toolset:$__GO_VERSION__ AS builder-exporter
 USER 0
 WORKDIR /workspace
 RUN yum install -y git --setopt=tsflags=nodocs && \

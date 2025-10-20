@@ -7,17 +7,17 @@ variables:
   KubeHttpCacheConfigName: 'kube-httpcache'
   openshiftProject: 'devops-toolchain'
   ocVersion: 'v4.13.44'
-  kubeHttpCacheVersion: 'stable-1.0'
+  kubeHttpCacheVersion: 'stable-2.0'
   sonarQubeConnection: 'sonarcloud'
-  goVersion: '1.23.6'  
+  goVersion: '1.24.6'  
   # docker variables below
-  goToolsetTag: '1.23.6-1.1744600118'         # <-- latest UBI 9 gotoolset image tag as of 25-04-2025
-  ubiTag: '9.5-1744101466'                    # <-- latest UBI 9 core image tag as of 25-04-2025
-  promExporterVersion: '1.6.1'
-  varnishRepoVersion: '77'
-  varnishVersion: '7.7.0'
-  varishRelease: '1'
-  varnishArch: 'el9.x86_64'
+  goToolsetTag: '1.24.6-1760420453'         # <-- latest UBI 9 gotoolset image tag as of 20-10-2025 -- https://catalog.redhat.com/en/software/containers/rhel9/go-toolset/61df08166d9a1b7b2aab2344
+  ubiTag: '9.6-1760340943'                    # <-- latest UBI 9 core image tag as of 20-10-2025 -- https://catalog.redhat.com/en/software/containers/ubi9/ubi/615bcf606feffc5384e8452e
+  promExporterVersion: 'v1.7.0'
+  varnishRepoVersion: '80'                  # <-- https://packagecloud.io/varnishcache/  repo version from here
+  varnishVersion: '8.0.0'                   # <-- https://packagecloud.io/varnishcache/  varnish version from here
+  varishRelease: '1'                        # <-- https://packagecloud.io/varnishcache/  varnish release number from here
+  varnishArch: 'el9.x86_64'                 # <-- https://packagecloud.io/varnishcache/  varnish architecture from here
 stages:
   - stage: GoVulnCheck
     displayName: 'Go Vulnerability Scan'
