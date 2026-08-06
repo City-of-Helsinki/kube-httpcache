@@ -7,12 +7,12 @@ variables:
   KubeHttpCacheConfigName: 'kube-httpcache'
   openshiftProject: 'devops-toolchain'
   ocVersion: 'v4.13.44'
-  kubeHttpCacheVersion: 'stable-4.0'        # selected on 04-05-2026 # <-- bump tag number for each quarterly security review
+  kubeHttpCacheVersion: 'stable-5.0'        # selected on 06-08-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
-  goVersion: '1.25.9'                       # selected on 04-05-2026 # <-- select latest go version as per goToolsetTag version number availability from redhat -- https://catalog.redhat.com - reponame - ubi9/go-toolset
+  goVersion: '1.26.5'                       # selected on 06-08-2026 # <-- select latest go version as per goToolsetTag version number availability from redhat -- https://catalog.redhat.com - reponame - ubi9/go-toolset
   # docker variables below
-  goToolsetTag: '1.25-1777537863'         # selected  on 04-05-2026 # <-- select latest version from -- https://catalog.redhat.com - reponame - ubi9/go-toolset
-  ubiTag: '9.7-1777858048'                  # selected  on 04-05-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
+  goToolsetTag: '1.26.5-1785791459'         # selected  on 06-08-2026 # <-- select latest version from -- https://catalog.redhat.com - reponame - ubi9/go-toolset
+  ubiTag: '9.8-1785906690'                  # selected  on 06-08-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
   promExporterVersion: 'v1.7.0'             # selected  on 04-05-2026 # <-- prom exporter version number from  https://github.com/leontappe/prometheus_varnish_exporter.git
   varnishRepoVersion: '80'                  # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  repo version from here  # if 8.0 then its 80
   varnishVersion: '8.0.0'                   # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish version from here - check version inside varnish repo selected
