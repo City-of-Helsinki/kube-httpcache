@@ -38,12 +38,15 @@ jobs:
           openshiftService: ${{ parameters.openshiftService }}
           version: ${{ parameters.ocVersion }}
       - script: |
-          envsubst < "$(Build.SourcesDirectory)/build/package/docker/Dockerfile" > tempdockerfile && mv tempdockerfile "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
+          # Safely substitute environment variables in Dockerfile without breaking bash/yum syntax
+          envsubst '$VARNISH_REPO_VERSION $VARNISH_VERSION $VARNISH_RELEASE $VARNISH_ARCH $__GO_VERSION__ $__UBI_TAG__ $PROM_EXPORTER_VERSION' \
+            < "$(Build.SourcesDirectory)/build/package/docker/Dockerfile" > tempdockerfile && mv tempdockerfile "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
+          
           cat "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
 
           CONFIG_FILE="$(Build.SourcesDirectory)/build/package/docker/${CONFIG_NAME}-build-config.yaml"
 
-          envsubst < "$CONFIG_FILE" > temp.yaml && mv temp.yaml "$CONFIG_FILE"
+          envsubst '$NAMESPACE $ENVIRONMENT $CONFIG_NAME $KUBE_HTTP_CACHE_VERSION' < "$CONFIG_FILE" > temp.yaml && mv temp.yaml "$CONFIG_FILE"
 
           cat "$CONFIG_FILE"
 
