@@ -21,10 +21,10 @@ jobs:
         with:
           version: "v${{ matrix.helm }}"
       - name: Test template rendering
-        run: /tmp/helm template ./chart/.
+        run: helm template ./chart/.
 
       - name: Lint chart
-        run: /tmp/helm lint ./chart/
+        run: helm lint ./chart/
 
   build:
     name: Build
