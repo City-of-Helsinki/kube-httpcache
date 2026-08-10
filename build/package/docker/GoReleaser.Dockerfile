@@ -6,11 +6,14 @@ LABEL       MAINTAINER="Martin Helmich <m.helmich@mittwald.de>"
 WORKDIR     /
 
 # varnish
-RUN         apt-get -qq update && apt-get -qq upgrade && apt-get -qq install curl && \
-            curl -s https://packagecloud.io/install/repositories/varnishcache/varnish76/script.deb.sh | bash && \
-            apt-get -qq update && apt-get -qq install varnish && \
-            apt-get -qq purge curl gnupg && \
-            apt-get -qq autoremove && apt-get -qq autoclean && \
+RUN         apt-get -qq update && apt-get -qq upgrade -y && \
+            apt-get -qq install -y curl gnupg ca-certificates && \
+            install -m 0755 -d /etc/apt/keyrings && \
+            curl -fsSL https://packagecloud.io/varnishcache/varnish76/gpgkey | gpg --dearmor -o /etc/apt/keyrings/varnishcache-archive-keyring.gpg && \
+            echo "deb [signed-by=/etc/apt/keyrings/varnishcache-archive-keyring.gpg] https://packagecloud.io/varnishcache/varnish76/debian/ bookworm main" > /etc/apt/sources.list.d/varnishcache_varnish76.list && \
+            apt-get -qq update && apt-get -qq install -y varnish && \
+            apt-get -qq purge -y curl gnupg && \
+            apt-get -qq autoremove -y && apt-get -qq autoclean && \
             rm -rf /var/cache/* && rm -rf /var/lib/apt/lists/*
 
 RUN         mkdir /exporter && \

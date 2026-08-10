@@ -25,6 +25,7 @@ parameters:
   type: string
 - name: varnishArch
   type: string
+
 jobs:
   - job: BuildDockerImage
     displayName: 'Build KubeHttpCache Image'
@@ -37,26 +38,22 @@ jobs:
           openshiftService: ${{ parameters.openshiftService }}
           version: ${{ parameters.ocVersion }}
       - script: |
-          export ENVIRONMENT="${{ parameters.environment }}"
-          export NAMESPACE="${{ parameters.namespace }}"
-          export KUBE_HTTP_CACHE_VERSION="${{ parameters.kubeHttpCacheVersion }}" 
-          export __GO_VERSION__="${{ parameters.goToolsetTag }}"
-          export __UBI_TAG__="${{ parameters.ubiTag }}"
-          export PROM_EXPORTER_VERSION="${{ parameters.promExporterVersion }}"
-          export VARNISH_REPO_VERSION="${{ parameters.varnishRepoVersion }}"
-          export ARG VARNISH_VERSION="${{ parameters.varnishVersion }}"
-          export ARG VARNISH_RELEASE="${{ parameters.varishRelease }}"
-          export ARG VARNISH_ARCH="${{ parameters.varnishArch }}"
-          envsubst < $(Build.SourcesDirectory)/build/package/docker/Dockerfile > tempdockerfile && mv tempdockerfile $(Build.SourcesDirectory)/build/package/docker/Dockerfile
-          cat $(Build.SourcesDirectory)/build/package/docker/Dockerfile
-          envsubst < $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml > temp.yaml && mv temp.yaml $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
-          cat $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml
-          oc apply -f $(Build.SourcesDirectory)/build/package/docker/${{ parameters.KubeHttpCacheConfigName }}-build-config.yaml -n ${{ parameters.namespace }}
-          oc start-build ${{ parameters.KubeHttpCacheConfigName }} --from-dir=$(Build.SourcesDirectory) -n ${{ parameters.namespace }} --insecure-skip-tls-verify=true
+          envsubst < "$(Build.SourcesDirectory)/build/package/docker/Dockerfile" > tempdockerfile && mv tempdockerfile "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
+          cat "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
+
+          CONFIG_FILE="$(Build.SourcesDirectory)/build/package/docker/${CONFIG_NAME}-build-config.yaml"
+
+          envsubst < "$CONFIG_FILE" > temp.yaml && mv temp.yaml "$CONFIG_FILE"
+
+          cat "$CONFIG_FILE"
+
+          oc apply -f "$CONFIG_FILE" -n "$NAMESPACE"
+
+          oc start-build "$CONFIG_NAME" --from-dir="$(Build.SourcesDirectory)" -n "$NAMESPACE" --insecure-skip-tls-verify=true
           
           echo "Waiting for build to be created..."
           while true; do
-            build_name=$(oc get builds -n ${{ parameters.namespace }} --selector=openshift.io/build-config.name=${{ parameters.KubeHttpCacheConfigName }} --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+            build_name=$(oc get builds -n "$NAMESPACE" --selector=openshift.io/build-config.name="$CONFIG_NAME" --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
             if [ -n "$build_name" ]; then
               echo "Latest build name: $build_name"
               break
@@ -67,7 +64,7 @@ jobs:
 
           echo "Monitoring build status..."
           while true; do
-            buildStatus=$(oc get build $build_name -n ${{ parameters.namespace }} -o jsonpath='{.status.phase}')
+            buildStatus=$(oc get build "$build_name" -n "$NAMESPACE" -o jsonpath='{.status.phase}')
             echo "Build status: $buildStatus"
             if [ "$buildStatus" == "Complete" ]; then
               echo "Build succeeded with status: $buildStatus"
@@ -78,5 +75,18 @@ jobs:
             fi
             sleep 10
           done
-          oc logs build/$build_name -n ${{ parameters.namespace }}
+
+          oc logs "build/$build_name" -n "$NAMESPACE"
         displayName: 'Apply BuildConfig and Start Build'
+        env:
+          ENVIRONMENT: ${{ parameters.environment }}
+          NAMESPACE: ${{ parameters.namespace }}
+          CONFIG_NAME: ${{ parameters.KubeHttpCacheConfigName }}
+          KUBE_HTTP_CACHE_VERSION: ${{ parameters.kubeHttpCacheVersion }}
+          __GO_VERSION__: ${{ parameters.goToolsetTag }}
+          __UBI_TAG__: ${{ parameters.ubiTag }}
+          PROM_EXPORTER_VERSION: ${{ parameters.promExporterVersion }}
+          VARNISH_REPO_VERSION: ${{ parameters.varnishRepoVersion }}
+          VARNISH_VERSION: ${{ parameters.varnishVersion }}
+          VARNISH_RELEASE: ${{ parameters.varishRelease }}
+          VARNISH_ARCH: ${{ parameters.varnishArch }}
