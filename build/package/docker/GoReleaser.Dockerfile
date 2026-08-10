@@ -7,10 +7,10 @@ WORKDIR     /
 
 # varnish
 RUN         apt-get -qq update && apt-get -qq upgrade -y && \
-            apt-get -qq install -y curl gnupg ca-certificates && \
+            apt-get -qq install -y curl gnupg ca-certificates apt-transport-https && \
             install -m 0755 -d /etc/apt/keyrings && \
             curl -fsSL https://packagecloud.io/varnishcache/varnish76/gpgkey | gpg --dearmor -o /etc/apt/keyrings/varnishcache-archive-keyring.gpg && \
-            echo "deb [signed-by=/etc/apt/keyrings/varnishcache-archive-keyring.gpg] https://packagecloud.io/varnishcache/varnish76/debian/ bookworm main" > /etc/apt/sources.list.d/varnishcache_varnish76.list && \
+            echo "deb [signed-by=/etc/apt/keyrings/varnishcache-archive-keyring.gpg http-allow-insecure=no] https://packagecloud.io/varnishcache/varnish76/debian/ bookworm main" > /etc/apt/sources.list.d/varnishcache_varnish76.list && \
             apt-get -qq update && apt-get -qq install -y varnish && \
             apt-get -qq purge -y curl gnupg && \
             apt-get -qq autoremove -y && apt-get -qq autoclean && \
