@@ -33,8 +33,9 @@ USER 0
 # Install minimal requirements
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     yum install -y jemalloc && \
-    printf '[varnishcache_varnish%s]\nname=varnishcache_varnish%s\nbaseurl=https://packagecloud.io/varnishcache/varnish%s/el/9/x86_64\nrepo_gpgcheck=1\ngpgcheck=1\nenabled=1\ngpgkey=https://packagecloud.io/varnishcache/varnish%s/gpgkey\nsslverify=1\nsslcacert=/etc/pki/tls/certs/ca-bundle.crt\nmetadata_expire=300\n' \
+    printf '[varnishcache_varnish%s]\nname=varnishcache_varnish%s\nbaseurl=https://packagecloud.io/varnishcache/varnish%s/el/9/x86_64\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1\ngpgkey=https://packagecloud.io/varnishcache/varnish%s/gpgkey\nsslverify=1\nsslcacert=/etc/pki/tls/certs/ca-bundle.crt\nmetadata_expire=300\n' \
       "$VARNISH_REPO_VERSION" "$VARNISH_REPO_VERSION" "$VARNISH_REPO_VERSION" "$VARNISH_REPO_VERSION" > /etc/yum.repos.d/varnishcache_varnish${VARNISH_REPO_VERSION}.repo && \
+    rpm --import https://packagecloud.io/varnishcache/varnish${VARNISH_REPO_VERSION}/gpgkey && \
     yum makecache -y --disablerepo='*' --enablerepo="varnishcache_varnish${VARNISH_REPO_VERSION}" && \
     yum install -y varnish-$VARNISH_VERSION-$VARNISH_RELEASE.$VARNISH_ARCH && \
     yum clean all && \
