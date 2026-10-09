@@ -1,11 +1,32 @@
 trigger: none
 pr: none
 
+parameters:
+  - name: publishTo
+    displayName: 'Publish the image to'
+    type: string
+    default: both
+    values:
+      - both        # West Europe + Sweden Central (during the migration)
+      - se          # Sweden Central only
+      - we          # West Europe only
+
 variables:
-  environment: devtest   
-  openshiftService: devops-toolchain
+  environment: devtest
   KubeHttpCacheConfigName: 'kube-httpcache'
-  openshiftProject: 'devops-toolchain'
+  # --- West Europe (legacy) -----------------------------------------------------------
+  # Kubernetes service connection (oc-login.yml convention: <name>-we)
+  weServiceConnection: 'devops-toolchain-we'
+  weNamespace: 'devops-toolchain'
+  wePool: 'Default'
+  weImageRepository: 'container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork'
+  wePushSecret: 'quay-secret-new'
+  # --- Sweden Central ------------------------------------------------------------------
+  seServiceConnection: 'devops-toolchain-se'
+  seNamespace: 'devops-toolchain'
+  sePool: 'dev-se.platta.hel.fi'
+  seImageRepository: 'image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork'
+  sePushSecret: 'quay-secret-new'   # robot dockerconfigjson synced from Key Vault
   ocVersion: 'v4.13.44'
   kubeHttpCacheVersion: 'stable-5.0'        # selected on 06-08-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
@@ -57,23 +78,56 @@ stages:
               inputs:
                 pollingTimeoutSec: '300'
                 failWhenQualityGateFails: true
-  - stage: build_kube_httpcache
-    displayName: 'Build KubeHttpCache Image'
-    dependsOn: SonarQube_Analysis
-    condition: succeeded()
-    jobs:
-      - template: templates/build-kube-httpcache.yml
-        parameters:
-          environment: $(environment)
-          openshiftService: $(openshiftService)
-          namespace: $(openshiftProject)
-          ocVersion: $(ocVersion)
-          KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
-          kubeHttpCacheVersion: $(kubeHttpCacheVersion)
-          ubiTag: $(ubiTag)
-          goToolsetTag: $(goToolsetTag)
-          promExporterVersion: $(promExporterVersion)
-          varnishRepoVersion: $(varnishRepoVersion)
-          varnishVersion: $(varnishVersion)
-          varishRelease: $(varishRelease)
-          varnishArch: $(varnishArch)
+  # One build per region: an OpenShift BuildConfig builds inside that cluster and pushes
+  # to that region's registry. Both stages run in parallel after the scans.
+  - ${{ if or(eq(parameters.publishTo, 'both'), eq(parameters.publishTo, 'we')) }}:
+    - stage: build_kube_httpcache_we
+      displayName: 'Build & publish (West Europe)'
+      dependsOn: SonarQube_Analysis
+      condition: succeeded()
+      jobs:
+        - template: templates/build-kube-httpcache.yml
+          parameters:
+            region: we
+            pool: ${{ variables.wePool }}
+            kubernetesServiceConnection: ${{ variables.weServiceConnection }}
+            namespace: $(weNamespace)
+            imageRepository: $(weImageRepository)
+            pushSecret: $(wePushSecret)
+            environment: $(environment)
+            ocVersion: $(ocVersion)
+            KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
+            kubeHttpCacheVersion: $(kubeHttpCacheVersion)
+            ubiTag: $(ubiTag)
+            goToolsetTag: $(goToolsetTag)
+            promExporterVersion: $(promExporterVersion)
+            varnishRepoVersion: $(varnishRepoVersion)
+            varnishVersion: $(varnishVersion)
+            varishRelease: $(varishRelease)
+            varnishArch: $(varnishArch)
+
+  - ${{ if or(eq(parameters.publishTo, 'both'), eq(parameters.publishTo, 'se')) }}:
+    - stage: build_kube_httpcache_se
+      displayName: 'Build & publish (Sweden Central)'
+      dependsOn: SonarQube_Analysis
+      condition: succeeded()
+      jobs:
+        - template: templates/build-kube-httpcache.yml
+          parameters:
+            region: se
+            pool: ${{ variables.sePool }}
+            kubernetesServiceConnection: ${{ variables.seServiceConnection }}
+            namespace: $(seNamespace)
+            imageRepository: $(seImageRepository)
+            pushSecret: $(sePushSecret)
+            environment: $(environment)
+            ocVersion: $(ocVersion)
+            KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
+            kubeHttpCacheVersion: $(kubeHttpCacheVersion)
+            ubiTag: $(ubiTag)
+            goToolsetTag: $(goToolsetTag)
+            promExporterVersion: $(promExporterVersion)
+            varnishRepoVersion: $(varnishRepoVersion)
+            varnishVersion: $(varnishVersion)
+            varishRelease: $(varishRelease)
+            varnishArch: $(varnishArch)
