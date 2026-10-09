@@ -1,11 +1,3 @@
-# ==============================================================================
-# Build the kube-httpcache image with an OpenShift BuildConfig in one cluster and
-# push it to that region's registry. Used once per region by kube-httpcache-prod.yaml.
-#
-# Login: Kubernetes service connection (Kubernetes@1 login). Both clusters use this
-# connection type; Sweden Central only offers Kubernetes connections. `oc` then runs
-# against the kubeconfig that Kubernetes@1 writes.
-# ==============================================================================
 parameters:
 - name: region                     # we | se - used in job names only
   type: string
