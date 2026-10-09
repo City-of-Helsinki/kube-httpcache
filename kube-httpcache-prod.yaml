@@ -1,18 +1,39 @@
 trigger: none
 pr: none
 
+parameters:
+  - name: publishTo
+    displayName: 'Publish the image to'
+    type: string
+    default: both
+    values:
+      - both        # West Europe + Sweden Central (during the migration)
+      - se          # Sweden Central only
+      - we          # West Europe only
+
 variables:
-  environment: devtest   
-  openshiftService: devops-toolchain
+  environment: devtest
   KubeHttpCacheConfigName: 'kube-httpcache'
-  openshiftProject: 'devops-toolchain'
+  # --- West Europe (legacy) -----------------------------------------------------------
+  # Kubernetes service connection (oc-login.yml convention: <name>-we)
+  weServiceConnection: 'devops-toolchain-we'
+  weNamespace: 'devops-toolchain'
+  wePool: 'Default'
+  weImageRepository: 'container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork'
+  wePushSecret: 'quay-secret-new'
+  # --- Sweden Central ------------------------------------------------------------------
+  seServiceConnection: 'devops-toolchain-se'
+  seNamespace: 'devops-toolchain'
+  sePool: 'dev-se.platta.hel.fi'
+  seImageRepository: 'image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork'
+  sePushSecret: 'quay-secret-new'   # robot dockerconfigjson synced from Key Vault
   ocVersion: 'v4.13.44'
   kubeHttpCacheVersion: 'stable-5.0'        # selected on 06-08-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
   goVersion: '1.26.5'                       # selected on 06-08-2026 # <-- select latest go version as per goToolsetTag version number availability from redhat -- https://catalog.redhat.com - reponame - ubi9/go-toolset
   # docker variables below
   goToolsetTag: '1.26-1785791459'         # selected  on 06-08-2026 # <-- select latest version from -- https://catalog.redhat.com - reponame - ubi9/go-toolset
-  ubiTag: '9.8-1788245065'                  # selected  on 06-08-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
+  ubiTag: '9.8-1785906690'                  # selected  on 06-08-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
   promExporterVersion: 'v1.7.0'             # selected  on 04-05-2026 # <-- prom exporter version number from  https://github.com/leontappe/prometheus_varnish_exporter.git
   varnishRepoVersion: '80'                  # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  repo version from here  # if 8.0 then its 80
   varnishVersion: '8.0.0'                   # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish version from here - check version inside varnish repo selected
@@ -57,23 +78,56 @@ stages:
               inputs:
                 pollingTimeoutSec: '300'
                 failWhenQualityGateFails: true
-  - stage: build_kube_httpcache
-    displayName: 'Build KubeHttpCache Image'
-    dependsOn: SonarQube_Analysis
-    condition: succeeded()
-    jobs:
-      - template: templates/build-kube-httpcache.yml
-        parameters:
-          environment: $(environment)
-          openshiftService: $(openshiftService)
-          namespace: $(openshiftProject)
-          ocVersion: $(ocVersion)
-          KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
-          kubeHttpCacheVersion: $(kubeHttpCacheVersion)
-          ubiTag: $(ubiTag)
-          goToolsetTag: $(goToolsetTag)
-          promExporterVersion: $(promExporterVersion)
-          varnishRepoVersion: $(varnishRepoVersion)
-          varnishVersion: $(varnishVersion)
-          varishRelease: $(varishRelease)
-          varnishArch: $(varnishArch)
+  # One build per region: an OpenShift BuildConfig builds inside that cluster and pushes
+  # to that region's registry. Both stages run in parallel after the scans.
+  - ${{ if or(eq(parameters.publishTo, 'both'), eq(parameters.publishTo, 'we')) }}:
+    - stage: build_kube_httpcache_we
+      displayName: 'Build & publish (West Europe)'
+      dependsOn: SonarQube_Analysis
+      condition: succeeded()
+      jobs:
+        - template: templates/build-kube-httpcache.yml
+          parameters:
+            region: we
+            pool: ${{ variables.wePool }}
+            kubernetesServiceConnection: ${{ variables.weServiceConnection }}
+            namespace: $(weNamespace)
+            imageRepository: $(weImageRepository)
+            pushSecret: $(wePushSecret)
+            environment: $(environment)
+            ocVersion: $(ocVersion)
+            KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
+            kubeHttpCacheVersion: $(kubeHttpCacheVersion)
+            ubiTag: $(ubiTag)
+            goToolsetTag: $(goToolsetTag)
+            promExporterVersion: $(promExporterVersion)
+            varnishRepoVersion: $(varnishRepoVersion)
+            varnishVersion: $(varnishVersion)
+            varishRelease: $(varishRelease)
+            varnishArch: $(varnishArch)
+
+  - ${{ if or(eq(parameters.publishTo, 'both'), eq(parameters.publishTo, 'se')) }}:
+    - stage: build_kube_httpcache_se
+      displayName: 'Build & publish (Sweden Central)'
+      dependsOn: SonarQube_Analysis
+      condition: succeeded()
+      jobs:
+        - template: templates/build-kube-httpcache.yml
+          parameters:
+            region: se
+            pool: ${{ variables.sePool }}
+            kubernetesServiceConnection: ${{ variables.seServiceConnection }}
+            namespace: $(seNamespace)
+            imageRepository: $(seImageRepository)
+            pushSecret: $(sePushSecret)
+            environment: $(environment)
+            ocVersion: $(ocVersion)
+            KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
+            kubeHttpCacheVersion: $(kubeHttpCacheVersion)
+            ubiTag: $(ubiTag)
+            goToolsetTag: $(goToolsetTag)
+            promExporterVersion: $(promExporterVersion)
+            varnishRepoVersion: $(varnishRepoVersion)
+            varnishVersion: $(varnishVersion)
+            varishRelease: $(varishRelease)
+            varnishArch: $(varnishArch)

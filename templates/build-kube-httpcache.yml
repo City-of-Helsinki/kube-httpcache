@@ -1,13 +1,29 @@
+# ==============================================================================
+# Build the kube-httpcache image with an OpenShift BuildConfig in one cluster and
+# push it to that region's registry. Used once per region by kube-httpcache-prod.yaml.
+#
+# Login: Kubernetes service connection (Kubernetes@1 login). Both clusters use this
+# connection type; Sweden Central only offers Kubernetes connections. `oc` then runs
+# against the kubeconfig that Kubernetes@1 writes.
+# ==============================================================================
 parameters:
+- name: region                     # we | se - used in job names only
+  type: string
+- name: pool                       # agent pool that can reach the cluster
+  type: string
+- name: kubernetesServiceConnection
+  type: string
+- name: namespace                  # namespace the BuildConfig runs in
+  type: string
+- name: imageRepository            # registry/org/repo without tag
+  type: string
+- name: pushSecret                 # dockerconfigjson secret in <namespace> with push rights
+  type: string
 - name: environment
-  type: string
-- name: openshiftService
-  type: string
-- name: namespace
   type: string
 - name: KubeHttpCacheConfigName
   type: string
-- name: ocVersion
+- name: ocVersion                  # only used if the agent has no oc binary
   type: string
 - name: kubeHttpCacheVersion
   type: string
@@ -27,64 +43,67 @@ parameters:
   type: string
 
 jobs:
-  - job: BuildDockerImage
-    displayName: 'Build KubeHttpCache Image'
-    pool: Default
+  - job: BuildDockerImage_${{ parameters.region }}
+    displayName: 'Build KubeHttpCache Image (${{ parameters.region }})'
+    pool: ${{ parameters.pool }}
     steps:
-      - task: oc-setup@2
-        displayName: 'Setup OpenShift CLI'
+      - task: Kubernetes@1
+        displayName: 'Kubernetes login (${{ parameters.kubernetesServiceConnection }})'
         inputs:
-          connectionType: 'OpenShift Connection Service'
-          openshiftService: ${{ parameters.openshiftService }}
-          version: ${{ parameters.ocVersion }}
-      - script: |
-          # Safely substitute environment variables in Dockerfile without breaking bash/yum syntax
-          envsubst '$VARNISH_REPO_VERSION $VARNISH_VERSION $VARNISH_RELEASE $VARNISH_ARCH $__GO_VERSION__ $__UBI_TAG__ $PROM_EXPORTER_VERSION' \
-            < "$(Build.SourcesDirectory)/build/package/docker/Dockerfile" > tempdockerfile && mv tempdockerfile "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
-          
-          cat "$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
+          command: 'login'
 
+      - script: |
+          set -euo pipefail
+          if command -v oc >/dev/null; then
+            oc version --client
+          else
+            echo "oc not found on agent - installing ${OC_VERSION}"
+            mkdir -p "$(Agent.TempDirectory)/oc"
+            curl -sSfL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION#v}/openshift-client-linux.tar.gz" \
+              | tar xz -C "$(Agent.TempDirectory)/oc" oc
+            echo "##vso[task.prependpath]$(Agent.TempDirectory)/oc"
+          fi
+        displayName: 'Ensure oc CLI'
+        env:
+          OC_VERSION: ${{ parameters.ocVersion }}
+
+      - script: |
+          set -euo pipefail
+          echo "Cluster:     $(oc whoami --show-server)"
+          echo "Namespace:   ${NAMESPACE}"
+          echo "Destination: ${IMAGE_REPOSITORY}:${KUBE_HTTP_CACHE_VERSION} (push secret ${PUSH_SECRET})"
+
+          if ! oc get secret "$PUSH_SECRET" -n "$NAMESPACE" >/dev/null 2>&1; then
+            echo "##vso[task.logissue type=error]Push secret ${PUSH_SECRET} not found in ${NAMESPACE}"
+            exit 1
+          fi
+
+          DOCKERFILE="$(Build.SourcesDirectory)/build/package/docker/Dockerfile"
           CONFIG_FILE="$(Build.SourcesDirectory)/build/package/docker/${CONFIG_NAME}-build-config.yaml"
 
-          envsubst '$NAMESPACE $ENVIRONMENT $CONFIG_NAME $KUBE_HTTP_CACHE_VERSION' < "$CONFIG_FILE" > temp.yaml && mv temp.yaml "$CONFIG_FILE"
+          # Substitute only the listed variables so bash/yum syntax in the Dockerfile stays intact
+          envsubst '$VARNISH_REPO_VERSION $VARNISH_VERSION $VARNISH_RELEASE $VARNISH_ARCH $__GO_VERSION__ $__UBI_TAG__ $PROM_EXPORTER_VERSION' \
+            < "$DOCKERFILE" > Dockerfile.tmp && mv Dockerfile.tmp "$DOCKERFILE"
+          cat "$DOCKERFILE"
 
+          envsubst '$NAMESPACE $ENVIRONMENT $CONFIG_NAME $KUBE_HTTP_CACHE_VERSION $IMAGE_REPOSITORY $PUSH_SECRET' \
+            < "$CONFIG_FILE" > config.tmp && mv config.tmp "$CONFIG_FILE"
           cat "$CONFIG_FILE"
 
           oc apply -f "$CONFIG_FILE" -n "$NAMESPACE"
 
-          oc start-build "$CONFIG_NAME" --from-dir="$(Build.SourcesDirectory)" -n "$NAMESPACE" --insecure-skip-tls-verify=true
-          
-          echo "Waiting for build to be created..."
-          while true; do
-            build_name=$(oc get builds -n "$NAMESPACE" --selector=openshift.io/build-config.name="$CONFIG_NAME" --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
-            if [ -n "$build_name" ]; then
-              echo "Latest build name: $build_name"
-              break
-            fi
-            echo "Build not found. Retrying in 10 seconds..."
-            sleep 10
-          done
-
-          echo "Monitoring build status..."
-          while true; do
-            buildStatus=$(oc get build "$build_name" -n "$NAMESPACE" -o jsonpath='{.status.phase}')
-            echo "Build status: $buildStatus"
-            if [ "$buildStatus" == "Complete" ]; then
-              echo "Build succeeded with status: $buildStatus"
-              break
-            elif [ "$buildStatus" == "Failed" ] || [ "$buildStatus" == "Error" ]; then
-              echo "Build failed with status: $buildStatus"
-              exit 1
-            fi
-            sleep 10
-          done
-
-          oc logs "build/$build_name" -n "$NAMESPACE"
-        displayName: 'Apply BuildConfig and Start Build'
+          # --follow streams the build log; --wait makes this step fail if the build fails
+          oc start-build "$CONFIG_NAME" -n "$NAMESPACE" \
+            --from-dir="$(Build.SourcesDirectory)" --follow --wait
+        displayName: 'Apply BuildConfig, build and push'
         env:
           ENVIRONMENT: ${{ parameters.environment }}
           NAMESPACE: ${{ parameters.namespace }}
           CONFIG_NAME: ${{ parameters.KubeHttpCacheConfigName }}
+          IMAGE_REPOSITORY: ${{ parameters.imageRepository }}
+          PUSH_SECRET: ${{ parameters.pushSecret }}
           KUBE_HTTP_CACHE_VERSION: ${{ parameters.kubeHttpCacheVersion }}
           __GO_VERSION__: ${{ parameters.goToolsetTag }}
           __UBI_TAG__: ${{ parameters.ubiTag }}

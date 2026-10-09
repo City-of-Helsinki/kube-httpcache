@@ -12,10 +12,13 @@ spec:
   output:
     to:
       kind: DockerImage
+      # IMAGE_REPOSITORY and PUSH_SECRET are substituted per region by templates/build-kube-httpcache.yml:
+      #   West Europe : container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork  (quay-secret-new)
+      #   Sweden      : image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork (hki-platta-components-openshift)
       name: >-
-        container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork:$KUBE_HTTP_CACHE_VERSION
+        $IMAGE_REPOSITORY:$KUBE_HTTP_CACHE_VERSION
     pushSecret:
-      name: quay-secret-new
+      name: $PUSH_SECRET
   resources:
     limits:
       cpu: 1000m
