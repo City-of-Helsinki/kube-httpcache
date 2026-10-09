@@ -23,7 +23,7 @@ variables:
   wePushSecret: 'quay-secret-new'
   # --- Sweden Central ------------------------------------------------------------------
   seConnectionType: 'kubernetes'
-  seServiceConnection: 'devops-toolchain-se'
+  seServiceConnection: 'devops-toolchain-dev-se'
   seNamespace: 'devops-toolchain'
   sePool: 'dev-se.platta.hel.fi'
   seImageRepository: 'image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork'
