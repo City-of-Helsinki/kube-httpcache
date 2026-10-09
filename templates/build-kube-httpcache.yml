@@ -3,8 +3,15 @@ parameters:
   type: string
 - name: pool                       # agent pool that can reach the cluster
   type: string
-- name: kubernetesServiceConnection
+- name: connectionType             # kubernetes | openshift
   type: string
+  default: kubernetes
+  values: [kubernetes, openshift]
+- name: serviceConnection          # name of the service connection of that type
+  type: string
+- name: insecureSkipTlsVerify      # pass --insecure-skip-tls-verify to oc start-build (old WE behaviour)
+  type: boolean
+  default: false
 - name: namespace                  # namespace the BuildConfig runs in
   type: string
 - name: imageRepository            # registry/org/repo without tag
@@ -15,7 +22,7 @@ parameters:
   type: string
 - name: KubeHttpCacheConfigName
   type: string
-- name: ocVersion                  # only used if the agent has no oc binary
+- name: ocVersion                  # oc-setup version (openshift); fallback download (kubernetes)
   type: string
 - name: kubeHttpCacheVersion
   type: string
@@ -39,12 +46,20 @@ jobs:
     displayName: 'Build KubeHttpCache Image (${{ parameters.region }})'
     pool: ${{ parameters.pool }}
     steps:
-      - task: Kubernetes@1
-        displayName: 'Kubernetes login (${{ parameters.kubernetesServiceConnection }})'
-        inputs:
-          connectionType: 'Kubernetes Service Connection'
-          kubernetesServiceEndpoint: ${{ parameters.kubernetesServiceConnection }}
-          command: 'login'
+      - ${{ if eq(parameters.connectionType, 'openshift') }}:
+        - task: oc-setup@2
+          displayName: 'OpenShift login (${{ parameters.serviceConnection }})'
+          inputs:
+            connectionType: 'OpenShift Connection Service'
+            openshiftService: ${{ parameters.serviceConnection }}
+            version: ${{ parameters.ocVersion }}
+      - ${{ else }}:
+        - task: Kubernetes@1
+          displayName: 'Kubernetes login (${{ parameters.serviceConnection }})'
+          inputs:
+            connectionType: 'Kubernetes Service Connection'
+            kubernetesServiceEndpoint: ${{ parameters.serviceConnection }}
+            command: 'login'
 
       - script: |
           set -euo pipefail
@@ -87,8 +102,11 @@ jobs:
           oc apply -f "$CONFIG_FILE" -n "$NAMESPACE"
 
           # --follow streams the build log; --wait makes this step fail if the build fails
+          TLS_FLAG=""
+          [ "$INSECURE_SKIP_TLS_VERIFY" = "True" ] || [ "$INSECURE_SKIP_TLS_VERIFY" = "true" ] && TLS_FLAG="--insecure-skip-tls-verify=true"
+          # shellcheck disable=SC2086
           oc start-build "$CONFIG_NAME" -n "$NAMESPACE" \
-            --from-dir="$(Build.SourcesDirectory)" --follow --wait
+            --from-dir="$(Build.SourcesDirectory)" --follow --wait $TLS_FLAG
         displayName: 'Apply BuildConfig, build and push'
         env:
           ENVIRONMENT: ${{ parameters.environment }}
@@ -96,6 +114,7 @@ jobs:
           CONFIG_NAME: ${{ parameters.KubeHttpCacheConfigName }}
           IMAGE_REPOSITORY: ${{ parameters.imageRepository }}
           PUSH_SECRET: ${{ parameters.pushSecret }}
+          INSECURE_SKIP_TLS_VERIFY: ${{ parameters.insecureSkipTlsVerify }}
           KUBE_HTTP_CACHE_VERSION: ${{ parameters.kubeHttpCacheVersion }}
           __GO_VERSION__: ${{ parameters.goToolsetTag }}
           __UBI_TAG__: ${{ parameters.ubiTag }}

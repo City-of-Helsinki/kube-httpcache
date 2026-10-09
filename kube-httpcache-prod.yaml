@@ -15,13 +15,14 @@ variables:
   environment: devtest
   KubeHttpCacheConfigName: 'kube-httpcache'
   # --- West Europe (legacy) -----------------------------------------------------------
-  # Kubernetes service connection (oc-login.yml convention: <name>-we)
-  weServiceConnection: 'devops-toolchain-we'
+  weConnectionType: 'openshift'
+  weServiceConnection: 'devops-toolchain'
   weNamespace: 'devops-toolchain'
   wePool: 'Default'
   weImageRepository: 'container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork'
   wePushSecret: 'quay-secret-new'
   # --- Sweden Central ------------------------------------------------------------------
+  seConnectionType: 'kubernetes'
   seServiceConnection: 'devops-toolchain-se'
   seNamespace: 'devops-toolchain'
   sePool: 'dev-se.platta.hel.fi'
@@ -90,7 +91,9 @@ stages:
           parameters:
             region: we
             pool: ${{ variables.wePool }}
-            kubernetesServiceConnection: ${{ variables.weServiceConnection }}
+            connectionType: ${{ variables.weConnectionType }}
+            serviceConnection: ${{ variables.weServiceConnection }}
+            insecureSkipTlsVerify: true       # as the previous West Europe build did
             namespace: $(weNamespace)
             imageRepository: $(weImageRepository)
             pushSecret: $(wePushSecret)
@@ -116,7 +119,8 @@ stages:
           parameters:
             region: se
             pool: ${{ variables.sePool }}
-            kubernetesServiceConnection: ${{ variables.seServiceConnection }}
+            connectionType: ${{ variables.seConnectionType }}
+            serviceConnection: ${{ variables.seServiceConnection }}
             namespace: $(seNamespace)
             imageRepository: $(seImageRepository)
             pushSecret: $(sePushSecret)
