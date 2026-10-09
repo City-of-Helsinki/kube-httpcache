@@ -14,7 +14,7 @@ spec:
       kind: DockerImage
       # IMAGE_REPOSITORY and PUSH_SECRET are substituted per region by templates/build-kube-httpcache.yml:
       #   West Europe : container-registry.platta-net.hel.fi/devops-toolchain/kube-httpcache-fork  (quay-secret-new)
-      #   Sweden      : image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork (hki-platta-components-openshift)
+      #   Sweden      : image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork (quay-secret-new)
       name: >-
         $IMAGE_REPOSITORY:$KUBE_HTTP_CACHE_VERSION
     pushSecret:
