@@ -27,7 +27,7 @@ variables:
   seNamespace: 'devops-toolchain'
   sePool: 'dev-se.platta.hel.fi'
   seImageRepository: 'image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork'
-  sePushSecret: 'quay-secret-new'
+  sePushSecret: 'hki-platta-components-openshift'
   ocVersion: 'v4.13.44'
   kubeHttpCacheVersion: 'stable-6.0'        # selected on 09-10-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
