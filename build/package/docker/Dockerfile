@@ -26,7 +26,6 @@ RUN go build -ldflags="-s -w" -o kube-httpcache ./cmd/kube-httpcache
 ###############
 FROM go-base AS builder-exporter
 WORKDIR /workspace
-# git is included in the golang image
 RUN git clone https://github.com/leontappe/prometheus_varnish_exporter.git --branch $PROM_EXPORTER_VERSION --depth 1 && \
     cd prometheus_varnish_exporter && \
     go build -ldflags="-s -w" -o /workspace/prometheus_varnish_exporter && \
