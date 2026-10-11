@@ -26,10 +26,11 @@ parameters:
   type: string
 - name: kubeHttpCacheVersion
   type: string
-- name: goUpstreamVersion          # official Go release used to compile (e.g. 1.26.9)
+- name: goBuilderImage             # Go image used to compile
   type: string
-- name: goUpstreamSha256           # SHA-256 of go<version>.linux-amd64.tar.gz from go.dev/dl
+- name: goExperiment               # GOEXPERIMENT for the build
   type: string
+  default: 
 - name: ubiTag
   type: string
 - name: promExporterVersion
@@ -93,7 +94,7 @@ jobs:
           CONFIG_FILE="$(Build.SourcesDirectory)/build/package/docker/${CONFIG_NAME}-build-config.yaml"
 
           # Substitute only the listed variables so bash/yum syntax in the Dockerfile stays intact
-          envsubst '$VARNISH_REPO_VERSION $VARNISH_VERSION $VARNISH_RELEASE $VARNISH_ARCH $GO_UPSTREAM_VERSION $GO_UPSTREAM_SHA256 $__UBI_TAG__ $PROM_EXPORTER_VERSION' \
+          envsubst '$VARNISH_REPO_VERSION $VARNISH_VERSION $VARNISH_RELEASE $VARNISH_ARCH $GO_BUILDER_IMAGE $GO_EXPERIMENT $__UBI_TAG__ $PROM_EXPORTER_VERSION' \
             < "$DOCKERFILE" > Dockerfile.tmp && mv Dockerfile.tmp "$DOCKERFILE"
           cat "$DOCKERFILE"
 
@@ -118,8 +119,8 @@ jobs:
           PUSH_SECRET: ${{ parameters.pushSecret }}
           INSECURE_SKIP_TLS_VERIFY: ${{ parameters.insecureSkipTlsVerify }}
           KUBE_HTTP_CACHE_VERSION: ${{ parameters.kubeHttpCacheVersion }}
-          GO_UPSTREAM_VERSION: ${{ parameters.goUpstreamVersion }}
-          GO_UPSTREAM_SHA256: ${{ parameters.goUpstreamSha256 }}
+          GO_BUILDER_IMAGE: ${{ parameters.goBuilderImage }}
+          GO_EXPERIMENT: ${{ parameters.goExperiment }}
           __UBI_TAG__: ${{ parameters.ubiTag }}
           PROM_EXPORTER_VERSION: ${{ parameters.promExporterVersion }}
           VARNISH_REPO_VERSION: ${{ parameters.varnishRepoVersion }}

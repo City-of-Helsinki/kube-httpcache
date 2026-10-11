@@ -32,10 +32,12 @@ variables:
   kubeHttpCacheVersion: 'stable-6.0'        # selected on 09-10-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
   # Go used for govulncheck 
-  # Bump both lines together; checksum: curl -s https://dl.google.com/go/go<version>.linux-amd64.tar.gz.sha256
   goUpstreamVersion: '1.26.9'                # selected on 09-10-2026 (stdlib security fixes)
-  goUpstreamSha256: '42d158b4d8f7b61ac0a830567c940a86098fb7aac52e467a5ebec03ef5cc2f8d'                # <-- sha256 of go1.26.9.linux-amd64.tar.gz (build fails until set)
+  goBuilderImage: 'public.ecr.aws/docker/library/golang:$(goUpstreamVersion)'
+  goExperiment: ''
   goVersion: '$(goUpstreamVersion)'          # govulncheck stage uses the same Go as the build
+
+
   # docker variables below
   ubiTag: '9.8-1791269371'                  # selected  on 09-10-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
   promExporterVersion: 'v1.7.0'             # selected  on 04-05-2026 # <-- prom exporter version number from  https://github.com/leontappe/prometheus_varnish_exporter.git
@@ -105,8 +107,8 @@ stages:
             KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
             kubeHttpCacheVersion: $(kubeHttpCacheVersion)
             ubiTag: $(ubiTag)
-            goUpstreamVersion: $(goUpstreamVersion)
-            goUpstreamSha256: $(goUpstreamSha256)
+            goBuilderImage: $(goBuilderImage)
+            goExperiment: $(goExperiment)
             promExporterVersion: $(promExporterVersion)
             varnishRepoVersion: $(varnishRepoVersion)
             varnishVersion: $(varnishVersion)
@@ -133,8 +135,8 @@ stages:
             KubeHttpCacheConfigName: $(KubeHttpCacheConfigName)
             kubeHttpCacheVersion: $(kubeHttpCacheVersion)
             ubiTag: $(ubiTag)
-            goUpstreamVersion: $(goUpstreamVersion)
-            goUpstreamSha256: $(goUpstreamSha256)
+            goBuilderImage: $(goBuilderImage)
+            goExperiment: $(goExperiment)
             promExporterVersion: $(promExporterVersion)
             varnishRepoVersion: $(varnishRepoVersion)
             varnishVersion: $(varnishVersion)

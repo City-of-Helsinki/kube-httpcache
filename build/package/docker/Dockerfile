@@ -1,18 +1,14 @@
 ###############
-# Stage 0: Go toolchain - official upstream release from go.dev on UBI
+# Stage 0: Go toolchain image (no download at build time).
 ###############
-FROM registry.redhat.io/ubi9/ubi:$__UBI_TAG__ AS go-base
-USER 0
-RUN test -n "$GO_UPSTREAM_SHA256" && test "$GO_UPSTREAM_SHA256" != "FILL_ME" \
-      || { echo "goUpstreamSha256 is not set - see kube-httpcache-prod.yaml"; exit 1; } && \
-    yum install -y tar gzip --setopt=tsflags=nodocs && yum clean all && \
-    curl -fsSL -o /tmp/go.tgz "https://go.dev/dl/go$GO_UPSTREAM_VERSION.linux-amd64.tar.gz" && \
-    echo "$GO_UPSTREAM_SHA256  /tmp/go.tgz" | sha256sum -c - && \
-    tar -C /usr/local -xzf /tmp/go.tgz && \
-    rm -rf /tmp/go.tgz /var/cache/yum
-ENV PATH=/usr/local/go/bin:$PATH \
-    GOTOOLCHAIN=local \
-    GOPATH=/go
+FROM $GO_BUILDER_IMAGE AS go-base
+# GOTOOLCHAIN=local
+# CGO_ENABLED=0     
+# GOEXPERIMENT:        
+ENV GOTOOLCHAIN=local \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOEXPERIMENT=$GO_EXPERIMENT
 RUN go version
 
 ###############
@@ -23,21 +19,17 @@ WORKDIR /workspace
 COPY go.mod go.sum ./
 COPY ./cmd/kube-httpcache ./cmd/kube-httpcache
 COPY ./pkg ./pkg
-RUN CGO_ENABLED=0 GOOS=linux \
-    go build -ldflags="-s -w" -o kube-httpcache ./cmd/kube-httpcache
+RUN go build -ldflags="-s -w" -o kube-httpcache ./cmd/kube-httpcache
 
 ###############
 # Stage 2: Build Prometheus Varnish Exporter (Optimized)
 ###############
 FROM go-base AS builder-exporter
 WORKDIR /workspace
-RUN yum install -y git --setopt=tsflags=nodocs && \
-    git clone https://github.com/leontappe/prometheus_varnish_exporter.git --branch $PROM_EXPORTER_VERSION --depth 1 && \
+RUN git clone https://github.com/leontappe/prometheus_varnish_exporter.git --branch $PROM_EXPORTER_VERSION --depth 1 && \
     cd prometheus_varnish_exporter && \
     go build -ldflags="-s -w" -o /workspace/prometheus_varnish_exporter && \
-    yum remove -y git && \
-    yum clean all && \
-    rm -rf /var/cache/yum /tmp/* /var/tmp/* /workspace/prometheus_varnish_exporter/.git
+    rm -rf /workspace/prometheus_varnish_exporter/.git
 
 ###############
 # Stage 3: Final Slim Image
