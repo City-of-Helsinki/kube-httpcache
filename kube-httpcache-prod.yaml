@@ -29,20 +29,20 @@ variables:
   seImageRepository: 'image-registry.int.platta.hel.fi/hki-platta-components/kube-httpcache-fork'
   sePushSecret: 'hki-platta-components-openshift'
   ocVersion: 'v4.13.44'
-  kubeHttpCacheVersion: 'stable-6.0'        # selected on 09-10-2026 # <-- bump tag number for each quarterly security review
+  kubeHttpCacheVersion: 'stable-7.0'        # selected on 02-11-2026 # <-- bump tag number for each quarterly security review
   sonarQubeConnection: 'sonarcloud'
   # Go used for govulncheck 
-  goUpstreamVersion: '1.26.9'                # selected on 09-10-2026 (stdlib security fixes)
+  goUpstreamVersion: '1.26.10'                # selected on 02-11-2026 (stdlib security fixes)
   goBuilderImage: 'public.ecr.aws/docker/library/golang:$(goUpstreamVersion)'
   goExperiment: ''
   goVersion: '$(goUpstreamVersion)'          # govulncheck stage uses the same Go as the build
 
 
   # docker variables below
-  ubiTag: '9.8-1791269371'                  # selected  on 09-10-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
+  ubiTag: '9.8-1793580630'                  # selected  on 02-11-2026 # <-- select latest version from  -- https://catalog.redhat.com/  - reponame - ubi/ubi9
   promExporterVersion: 'v1.7.0'             # selected  on 04-05-2026 # <-- prom exporter version number from  https://github.com/leontappe/prometheus_varnish_exporter.git
   varnishRepoVersion: '80'                  # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  repo version from here  # if 8.0 then its 80
-  varnishVersion: '8.0.0'                   # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish version from here - check version inside varnish repo selected
+  varnishVersion: '8.0.2'                   # selected  on 02-11-2026 # <-- https://packagecloud.io/varnishcache/  varnish version from here - check version inside varnish repo selected
   varishRelease: '1'                        # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish release number from here - check release number - usually  1 
   varnishArch: 'el9.x86_64'                 # selected  on 20-10-2025 # <-- https://packagecloud.io/varnishcache/  varnish architecture from here - mostly does not change
 stages:
